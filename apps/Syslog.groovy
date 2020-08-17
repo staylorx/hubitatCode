@@ -1,5 +1,5 @@
 metadata {
-    definition (name: "Syslog", namespace: "test", author: "Test") {
+    definition (name: "Syslog", namespace: "hubitatuser12", author: "Hubitat User 12") {
         capability "Initialize"
     }
     command "disconnect"
