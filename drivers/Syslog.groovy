@@ -31,7 +31,8 @@ metadata {
 
     preferences {
         input("ip", "text", title: "Syslog IP Address", description: "ip address of the syslog server", required: true)
-        input("port", "number", title: "Syslog IP Port", description: "syslog port (UDP)", defaultValue: 514, required: true)
+        input("port", "number", title: "Syslog IP Port", description: "syslog port", defaultValue: 514, required: true)
+        input("tcpudp", "enum", title: "UDP or TCP?", description: "", defaultValue: "UDP", options: ["UDP","TCP"])
         input("hostname", "text", title: "Hub Hostname", description: "hostname of the hub; leave empty for IP address")
         input("logEnable", "bool", title: "Enable debug logging", description: "", defaultValue: false)
     }
@@ -97,10 +98,17 @@ void parse(String description) {
             if (logEnable) log.debug "time we get = ${descData.time}; time we want ${isoDate}"
             
             // made up PROCID or MSGID //TODO find PROCID and MSGID in the API?
-            def constructedString = "<${priority}>1 ${isoDate} ${hostname} Hubitat - - [sd_id_1@32473 device_name=\"${descData.name}\" device_id=\"${descData.id}\"] ${descData.msg}"
+            def constructedString = "<${priority}>1 ${isoDate} ${hostname} Hubitat - - [sd_id_1@32473 device_name=\"${descData.name}\" device_id=\"${descData.id}\"] ${descData.msg}\n"
             if (logEnable) log.debug "sending: ${constructedString}"
             
-            sendHubCommand(new HubAction(constructedString, Protocol.LAN, [destinationAddress: "${ip}:${port}", type: HubAction.Type.LAN_TYPE_UDPCLIENT, ignoreResponse:true]))
+            if (udptcp == 'UDP') {
+              if (logEnable) log.debug "UDP selected"
+              sendHubCommand(new HubAction(constructedString, Protocol.LAN, [destinationAddress: "${ip}:${port}", type: HubAction.Type.LAN_TYPE_UDPCLIENT, ignoreResponse:true]))
+            } else {
+              if (logEnable) log.debug "TCP selected"
+              sendHubCommand(new HubAction(constructedString, Protocol.LAN, [destinationAddress: "${ip}:${port}", type: HubAction.Type.LAN_TYPE_RAW]))
+            }
+
         } else {
             log.warn "No log server set"
         }
