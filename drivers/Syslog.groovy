@@ -40,10 +40,38 @@ void parse(String description) {
     // don't log our own messages, we will get into a loop
     if("${descData.id}" != "${device.id}") {
         if(ip != null) {
-            sendHubCommand(new HubAction("<14>1 ${descData.time} Hubitat ${descData.name} ${descData.id} ${descData.msg}", Protocol.LAN, [destinationAddress: "${ip}:514", type: HubAction.Type.LAN_TYPE_UDPCLIENT, ignoreResponse:true]))
+            // facility = 1 (user), severity = 6 (informational)
+            // facility * 8 + severity = 14
+            def priority
+            switch (descData.level) {
+                case "info":
+                    priority = 14
+                    break
+                case "warn":
+                    priority = 12
+                    break
+                case "error":
+                    priority = 11
+                    break
+                default:
+                    priority = 15
+            }
+            
+            sendHubCommand(new HubAction("<${priority}>1 ${descData.time} Hubitat ${descData.name} ${descData.id} ${descData.msg}", Protocol.LAN, [destinationAddress: "${ip}:514", type: HubAction.Type.LAN_TYPE_UDPCLIENT, ignoreResponse:true]))
         } else {
             log.warn "No log server set"
         }
+    }
+}
+
+void connect() {
+    log.debug "attempting connection"
+    try {
+        interfaces.webSocket.connect("http://localhost:8080/logsocket")
+        pauseExecution(1000)
+    } catch(e) {
+        log.debug "initialize error: ${e.message}"
+        logger.error("Exception", e)
     }
 }
 
@@ -56,16 +84,16 @@ void uninstalled() {
 }
 
 void initialize() {
-    try {
-        interfaces.webSocket.connect("http://localhost:8080/logsocket")
-        pauseExecution(1000)
-        log.info "connection established"
-    } catch(e) {
-        log.debug "initialize error: ${e.message}"
-        logger.error("Exception", e)
-    }
+    runIn(5, "connect")
 }
+
+
 
 void webSocketStatus(String message) {
 	// handle error messages and reconnect
+    log.debug "Got status ${message}" 
+    if(message.startsWith("failure")) {
+        // reconnect in a little bit
+        runIn(5, connect)
+    }
 }
