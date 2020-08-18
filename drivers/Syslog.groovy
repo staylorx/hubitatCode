@@ -96,9 +96,8 @@ void parse(String description) {
             def isoDate = date.format("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", location.timeZone)
             if (logEnable) log.debug "time we get = ${descData.time}; time we want ${isoDate}"
             
-            // made up PROCID or MSGID
-            def msgID = UUID.randomUUID().toString()
-            def constructedString = "<${priority}>1 ${isoDate} ${hostname} Hubitat 777 ${msgID} [sd_id_1@32473 device_name=\"${descData.name}\" device_id=\"${descData.id}\"] ${descData.msg}"
+            // made up PROCID or MSGID //TODO find PROCID and MSGID in the API?
+            def constructedString = "<${priority}>1 ${isoDate} ${hostname} Hubitat - - [sd_id_1@32473 device_name=\"${descData.name}\" device_id=\"${descData.id}\"] ${descData.msg}"
             if (logEnable) log.debug "sending: ${constructedString}"
             
             sendHubCommand(new HubAction(constructedString, Protocol.LAN, [destinationAddress: "${ip}:${port}", type: HubAction.Type.LAN_TYPE_UDPCLIENT, ignoreResponse:true]))
