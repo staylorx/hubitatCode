@@ -20,6 +20,7 @@ metadata {
 
     preferences {
         input("ip", "text", title: "Syslog IP Address", description: "ip")
+        input("port", "text", title: "Syslog IP Port", description: "port")
     }
 }
 
@@ -57,7 +58,7 @@ void parse(String description) {
                     priority = 15
             }
             
-            sendHubCommand(new HubAction("<${priority}>1 ${descData.time} Hubitat ${descData.name} ${descData.id} ${descData.msg}", Protocol.LAN, [destinationAddress: "${ip}:514", type: HubAction.Type.LAN_TYPE_UDPCLIENT, ignoreResponse:true]))
+            sendHubCommand(new HubAction("<${priority}>1 ${descData.time} Hubitat ${descData.name} ${descData.id} ${descData.msg}", Protocol.LAN, [destinationAddress: "${ip}:${port}", type: HubAction.Type.LAN_TYPE_UDPCLIENT, ignoreResponse:true]))
         } else {
             log.warn "No log server set"
         }
